@@ -5,7 +5,7 @@
 
 `default_nettype none
 
-`timescale 1ns/1ps
+//`timescale 1ns/1ps #as it gave lint error LE
 
 
 /////////////////////////////////////////
@@ -22,6 +22,8 @@ module tt_um_elemental_harmony (
   output wire [7:0] uio_oe
 );
 
+    wire [2:0] dbg_curr;
+    
     assign uio_oe[7:1]  = 7'b0000000;
     assign uio_out[7:1] = 7'b0000000;
   
@@ -45,7 +47,7 @@ module tt_um_elemental_harmony (
     end
 
     assign start_pulse = ui_in[7] && !start_prev;
-
+    assign dbg_curr = dut_core.curr_state;
 
     harmony_core dut_core (
       .clk(clk), 
@@ -95,7 +97,7 @@ module harmony_core (
     reg signed [7:0] hscorefinal, dscorefinal; 
     reg signed [7:0] nxt_dscorefinal, nxt_hscorefinal;
     reg signed [7:0] nxt_acc_dscore, nxt_acc_hscore;
-    reg signed [7:0] acc_hscore, acc_dscore;
+
                     
     reg [15:0] lfsr;
     reg [4:0]  fill_count; 
@@ -111,6 +113,8 @@ module harmony_core (
     assign occ_msb = occ[15:8];
     assign occ_lsb = occ[7:0];
 	
+    wire _unused_ok = &{uio_in, 1'b0};
+    
     // LFSR Pattern Selection logic
     wire [2:0] design_pat = (lfsr[6:4] == 3'b000) ? (lfsr[15:13] | 3'b001) : lfsr[6:4];
 
@@ -172,22 +176,26 @@ module harmony_core (
 
         // Check North
         if (pos >= 4 && occ[pos-4]) begin      
-            acc = acc + get_pair_score(pat, board[pos-4]);
+            //acc = acc + get_pair_score(pat, board[pos-4]);
+            acc = acc + {5'b0, get_pair_score(pat, board[pos-4])};
             neighbor_count = neighbor_count + 1;
         end
         // Check South
         if (pos <= 11 && occ[pos+4]) begin     
-            acc = acc + get_pair_score(pat, board[pos+4]);
+            //acc = acc + get_pair_score(pat, board[pos+4]);
+            acc = acc + {5'b0, get_pair_score(pat, board[pos+4])};
             neighbor_count = neighbor_count + 1;
         end
         // Check West
         if (pos % 4 != 0 && occ[pos-1]) begin  
-            acc = acc + get_pair_score(pat, board[pos-1]);
+            //acc = acc + get_pair_score(pat, board[pos-1]);
+            acc = acc + {5'b0, get_pair_score(pat, board[pos-1])};
             neighbor_count = neighbor_count + 1;
         end
         // Check East
         if (pos % 4 != 3 && occ[pos+1]) begin  
-            acc = acc + get_pair_score(pat, board[pos+1]);
+            //acc = acc + get_pair_score(pat, board[pos+1]);
+            acc = acc + {5'b0, get_pair_score(pat, board[pos+1])};
             neighbor_count = neighbor_count + 1;
         end
             
@@ -267,8 +275,16 @@ module harmony_core (
                         fill_count       <= fill_count + 1'b1;
                         dscorefinal      <= nxt_dscorefinal;
                         acc_dscore       <= nxt_acc_dscore;
+                    end else begin
+                    	board[lfsr[3:0]] <= board[lfsr[3:0]];
+                        occ[lfsr[3:0]]   <= occ[lfsr[3:0]];
+                        fill_count       <= fill_count;
+                        dscorefinal      <= dscorefinal;
+                        acc_dscore       <= acc_dscore;
                     end
                 end
+                
+                default: nxt_state = ST_IDLE;
             endcase
         end
     end  
@@ -301,12 +317,20 @@ module harmony_core (
                     nxt_dscorefinal 	 = dscorefinal + nxt_acc_dscore;
                 end
             end
+            
+            default: begin
+            	nxt_dscorefinal = '0;
+		nxt_hscorefinal = '0;
+		nxt_acc_hscore  = 8'sd0;
+		nxt_acc_dscore  = 8'sd0;
+		uio_out_int = 1'b0; 
+		uio_oe_int  = 1'b1;
+            end
         endcase
     end
 
     always_comb begin
       uo_out_data = 8'h00; 
-
 
       case (curr_state)
           ST_IDLE: begin
@@ -338,6 +362,10 @@ module harmony_core (
           ST_FINAL: begin
               uo_out_data = {7'b0, last};
           end
+          
+          default: begin
+	      uo_out_data = 8'h00;
+	  end
 
       endcase
 	end

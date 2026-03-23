@@ -111,8 +111,9 @@ async def test_harmony_final(dut):
             
             while True:
                 await RisingEdge(dut.clk)
-                curr_s = int(dut.user_project.dut_core.curr_state.value)
-                
+                #curr_s = int(dut.user_project.dut_core.curr_state.value) #caused error so changed it
+                curr_s = int(dut.user_project.dbg_state.value);
+	
                 if curr_s == 2: # ST_HUMANPLAY
                     move_accepted = True
                     break # Exit monitor loop, move_accepted=True exits retry loop
