@@ -111,9 +111,9 @@ async def test_harmony_final(dut):
             
             while True:
                 await RisingEdge(dut.clk)
-                #curr_s = int(dut.user_project.dut_core.curr_state.value) #caused error so changed it
+                #curr_s = int(curr_s) #caused error so changed it
 
-                curr_s = curr_s = int(dut.user_project.uio_out.value[3:1])
+                curr_s = int(dut.user_project.uio_out.value[3:1])
 	
                 if curr_s == 2: # ST_HUMANPLAY
                     move_accepted = True
@@ -151,7 +151,7 @@ async def test_harmony_final(dut):
         dut._log.info(f"Human Move: Pos {my_pos}, Pat {my_pat}")
 
         # --- C. SAMPLE HUMAN SCORE ---
-        while dut.user_project.dut_core.curr_state.value != 2:
+        while curr_s != 2:
             await RisingEdge(dut.clk)
 
         h_round_score = dut.uo_out.value.to_signed()
@@ -165,7 +165,7 @@ async def test_harmony_final(dut):
         dut._log.info(f"Round {r_idx} HUMAN Score Recorded by RTL: {h_round_score} | Total: {total_h}")
 
         # --- D. SAMPLE DESIGN SCORE ---
-        while dut.user_project.dut_core.curr_state.value != 3:
+        while curr_s != 3:
             await RisingEdge(dut.clk)
 
         d_round_score = 0
@@ -179,7 +179,7 @@ async def test_harmony_final(dut):
                 lfsr_pos   = dut.user_project.dut_core.lfsr_pos.value.to_unsigned()
             
             await RisingEdge(dut.clk)
-            if dut.user_project.dut_core.curr_state.value != 3:
+            if curr_s != 3:
                 break 
 
         # --- SCOREBOARD CALL (DESIGN) ---
@@ -194,7 +194,7 @@ async def test_harmony_final(dut):
         dut._log.info(f"Round {r_idx} DESIGN Score Recorded by RTL: {d_round_score} | Total: {total_d}")
 
         # E. HANDSHAKE
-        while dut.user_project.dut_core.curr_state.value not in [0, 7]:
+        while curr_s not in [0, 7]:
             await RisingEdge(dut.clk)
 
     # --- 4. FINAL RESULTS & MISMATCH SUMMARY ---
