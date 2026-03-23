@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1774285954" />
-    <testcase name="test_harmony_final" classname="test" file="/home/zerotoasic/tt_IHP26a_Elemental_Harmony_Game/test/test.py" lineno="67" time="0.028594017028808594" sim_time_ns="1560.0" ratio_time="54556.867558283026" />
+    <property name="random_seed" value="1774294905" />
+    <testcase name="test_harmony_final" classname="test" file="/home/zerotoasic/tt_IHP26a_Elemental_Harmony_Game/test/test.py" lineno="67" time="0.041536569595336914" sim_time_ns="1590.0" ratio_time="38279.52128667122" />
   </testsuite>
 </testsuites>

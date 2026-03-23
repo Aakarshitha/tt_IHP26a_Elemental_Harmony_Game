@@ -27,11 +27,11 @@ module tt_um_elemental_harmony (
     assign uio_oe[7:1]  = 7'b0000000;
     assign uio_out[7:1] = 7'b0000000;
   
-    reg internal_rst_n;
+    wire internal_rst_n;
     assign internal_rst_n = rst_n & ena;
   
-    reg [3:0] h_pos;
-    reg [2:0] h_pat;
+    wire [3:0] h_pos;
+    wire [2:0] h_pat;
     assign h_pos = ui_in[3:0];
     assign h_pat = ui_in[6:4];
   
@@ -60,6 +60,7 @@ module tt_um_elemental_harmony (
       .uio_oe_int(uio_oe[0])
     );
   
+    wire _unused_ok = &{uio_in, 1'b0};
   
 endmodule
 
@@ -177,25 +178,31 @@ module harmony_core (
         // Check North
         if (pos >= 4 && occ[pos-4]) begin      
             //acc = acc + get_pair_score(pat, board[pos-4]);
-            acc = acc + {5'b0, get_pair_score(pat, board[pos-4])};
+	    acc = acc + 8'(get_pair_score(pat, board[pos-4]));
             neighbor_count = neighbor_count + 1;
         end
         // Check South
         if (pos <= 11 && occ[pos+4]) begin     
             //acc = acc + get_pair_score(pat, board[pos+4]);
-            acc = acc + {5'b0, get_pair_score(pat, board[pos+4])};
+
+	    acc = acc + 8'(get_pair_score(pat, board[pos+4]));
+
             neighbor_count = neighbor_count + 1;
         end
         // Check West
         if (pos % 4 != 0 && occ[pos-1]) begin  
             //acc = acc + get_pair_score(pat, board[pos-1]);
-            acc = acc + {5'b0, get_pair_score(pat, board[pos-1])};
+
+	    acc = acc + 8'(get_pair_score(pat, board[pos-1]));
+
             neighbor_count = neighbor_count + 1;
         end
         // Check East
         if (pos % 4 != 3 && occ[pos+1]) begin  
             //acc = acc + get_pair_score(pat, board[pos+1]);
-            acc = acc + {5'b0, get_pair_score(pat, board[pos+1])};
+
+	    acc = acc + 8'(get_pair_score(pat, board[pos+1]));
+
             neighbor_count = neighbor_count + 1;
         end
             
@@ -231,7 +238,6 @@ module harmony_core (
             ST_ERROR_2:    nxt_state = ST_ERROR_3;
             ST_ERROR_3:    nxt_state = ST_IDLE;//then again from idle, the new position is taken for retry, never goes to HUMANPLAY directly from ERROR_3 state
             ST_FINAL:      nxt_state = ST_IDLE;
-            default:       nxt_state = ST_IDLE;
         endcase
     end
   
@@ -244,8 +250,6 @@ module harmony_core (
             fill_count   <= 5'd0;
             hscorefinal  <= 8'sd0;
             dscorefinal  <= 8'sd0;
-            acc_hscore   <= 8'd0;
-            acc_dscore   <= 8'd0;
             lfsr <= 16'hACE1;
 
             for (i=0; i<16; i=i+1) board[i] <= 3'b0;
@@ -274,25 +278,23 @@ module harmony_core (
                         occ[lfsr[3:0]]   <= 1'b1;
                         fill_count       <= fill_count + 1'b1;
                         dscorefinal      <= nxt_dscorefinal;
-                        acc_dscore       <= nxt_acc_dscore;
-                    end else begin
-                    	board[lfsr[3:0]] <= board[lfsr[3:0]];
-                        occ[lfsr[3:0]]   <= occ[lfsr[3:0]];
-                        fill_count       <= fill_count;
-                        dscorefinal      <= dscorefinal;
-                        acc_dscore       <= acc_dscore;
+
                     end
                 end
                 
-                default: nxt_state = ST_IDLE;
+                default: begin
+                        board[lfsr[3:0]] <= board[lfsr[3:0]];
+                        occ[lfsr[3:0]]   <= occ[lfsr[3:0]];
+                        fill_count       <= fill_count;
+                        dscorefinal      <= dscorefinal;
+		end
+
             endcase
         end
     end  
   
   
     always_comb begin
-        //nxt_hscorefinal = hscorefinal;
-        //nxt_dscorefinal = dscorefinal;
         nxt_dscorefinal = '0;
         nxt_hscorefinal = '0;
         nxt_acc_hscore  = 8'sd0;
@@ -318,14 +320,7 @@ module harmony_core (
                 end
             end
             
-            default: begin
-            	nxt_dscorefinal = '0;
-		nxt_hscorefinal = '0;
-		nxt_acc_hscore  = 8'sd0;
-		nxt_acc_dscore  = 8'sd0;
-		uio_out_int = 1'b0; 
-		uio_oe_int  = 1'b1;
-            end
+
         endcase
     end
 
@@ -363,9 +358,6 @@ module harmony_core (
               uo_out_data = {7'b0, last};
           end
           
-          default: begin
-	      uo_out_data = 8'h00;
-	  end
 
       endcase
 	end

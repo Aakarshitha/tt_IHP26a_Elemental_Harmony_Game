@@ -67,7 +67,7 @@ class HardwareScoreboard:
 @cocotb.test()
 async def test_harmony_final(dut):
     # --- 1. SEEDING & SETUP ---
-    seed = int(os.environ.get('TESTSEED', 5678))
+    seed = int(os.environ.get('TESTSEED', 52))
     random.seed(seed)
     dut._log.info(f"SIMULATION START - Seed: {seed}")
 
@@ -112,7 +112,9 @@ async def test_harmony_final(dut):
             while True:
                 await RisingEdge(dut.clk)
                 #curr_s = int(dut.user_project.dut_core.curr_state.value) #caused error so changed it
-                curr_s = int(dut.user_project.dbg_state.value);
+
+                curr_s = int(dut.user_project.dbg_curr.value);
+
 	
                 if curr_s == 2: # ST_HUMANPLAY
                     move_accepted = True
