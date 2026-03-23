@@ -1,0 +1,40 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Mon Mar 23 17:13:54 2026
+[*]
+[dumpfile] "/home/zerotoasic/tt_IHP26a_Elemental_Harmony_Game/test/tb_new_testwave.fst"
+[dumpfile_mtime] "Mon Mar 23 17:12:35 2026"
+[dumpfile_size] 2754
+[savefile] "/home/zerotoasic/tt_IHP26a_Elemental_Harmony_Game/test/sample_wave_seed5678.gtkw"
+[timestart] 0
+[size] 1392 688
+[pos] -27 -24
+*-18.652822 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb.
+[treeopen] tb.user_project.
+[sst_width] 297
+[signals_width] 310
+[sst_expanded] 1
+[sst_vpaned_height] 188
+@28
+tb.clk
+@22
+tb.uo_out[7:0]
+tb.uio_out[7:0]
+@28
+tb.user_project.dut_core.curr_state[2:0]
+@22
+tb.user_project.dut_core.lfsr_pos[3:0]
+tb.user_project.dut_core.nxt_acc_dscore[7:0]
+tb.user_project.dut_core.nxt_dscorefinal[7:0]
+tb.user_project.dut_core.dscorefinal[7:0]
+tb.user_project.dut_core.nxt_acc_hscore[7:0]
+tb.user_project.dut_core.nxt_hscorefinal[7:0]
+tb.user_project.dut_core.hscorefinal[7:0]
+tb.user_project.dut_core.h_pos[3:0]
+tb.user_project.dut_core.occ_lsb[7:0]
+tb.user_project.dut_core.occ_msb[7:0]
+@28
+tb.user_project.dut_core.start
+[pattern_trace] 1
+[pattern_trace] 0

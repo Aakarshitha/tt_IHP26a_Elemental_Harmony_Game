@@ -6,13 +6,30 @@ SIM ?= icarus
 FST ?= -fst # Use more efficient FST format
 TOPLEVEL_LANG ?= verilog
 SRC_DIR = $(PWD)/../src
-PROJECT_SOURCES = project.v
+PROJECT_SOURCES = tt_um_elemental_harmony.v
+
 
 ifneq ($(GATES),yes)
+
+# --- THE FIX ---
+# Point directly to the binary to bypass the broken shell wrapper
+#VVP_REAL = /home/zerotoasic/asic_tools/oss-cad-suite/py3bin/vvp
+
+#ifeq ($(SIM),icarus)
+ #   override VVP := $(VVP_REAL)
+  #  $(info --- VVP has been overriden to $(VVP_REAL) ---) 
+#endif
+# ---------------
 
 # RTL simulation:
 SIM_BUILD				= sim_build/rtl
 VERILOG_SOURCES += $(addprefix $(SRC_DIR)/,$(PROJECT_SOURCES))
+# Force the simulator to use the raw binary, bypassing the broken shell wrapper
+#SIM_BINARY = /home/zerotoasic/asic_tools/oss-cad-suite/bin/
+#VVP_BIN = /home/zerotoasic/asic_tools/oss-cad-suite/bin/.vvp
+
+# Tell cocotb to use our specific vvp binary
+#override VVP := $(VVP_BIN)
 
 else
 
