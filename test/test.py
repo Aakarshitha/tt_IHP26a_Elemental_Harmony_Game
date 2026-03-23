@@ -113,8 +113,7 @@ async def test_harmony_final(dut):
                 await RisingEdge(dut.clk)
                 #curr_s = int(dut.user_project.dut_core.curr_state.value) #caused error so changed it
 
-                curr_s = int(dut.user_project.dbg_curr.value);
-
+                curr_s = curr_s = int(dut.user_project.uio_out.value[3:1])
 	
                 if curr_s == 2: # ST_HUMANPLAY
                     move_accepted = True

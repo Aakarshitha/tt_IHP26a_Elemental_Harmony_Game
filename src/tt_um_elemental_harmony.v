@@ -22,10 +22,10 @@ module tt_um_elemental_harmony (
   output wire [7:0] uio_oe
 );
 
-    wire [2:0] dbg_curr;
+
     
-    assign uio_oe[7:1]  = 7'b0000000;
-    assign uio_out[7:1] = 7'b0000000;
+    assign uio_oe[7:4]  = 4'b0000;
+    assign uio_out[7:4] = 4'b0000;
   
     wire internal_rst_n;
     assign internal_rst_n = rst_n & ena;
@@ -47,7 +47,7 @@ module tt_um_elemental_harmony (
     end
 
     assign start_pulse = ui_in[7] && !start_prev;
-    assign dbg_curr = dut_core.curr_state;
+
 
     harmony_core dut_core (
       .clk(clk), 
@@ -56,8 +56,8 @@ module tt_um_elemental_harmony (
       .h_pat(h_pat),
       .start(start_pulse),
       .uo_out(uo_out),
-      .uio_out_int(uio_out[0]),
-      .uio_oe_int(uio_oe[0])
+      .uio_out_int(uio_out[3:0]),
+      .uio_oe_int(uio_oe[1:0])
     );
   
     wire _unused_ok = &{uio_in, 1'b0};
@@ -76,8 +76,8 @@ module harmony_core (
     input  wire [3:0] h_pos,     
     input  wire [2:0] h_pat,     
     output reg  [7:0] uo_out,
-    output reg uio_out_int,
-    output reg uio_oe_int
+    output reg [3:0] uio_out_int,
+    output reg [1:0] uio_oe_int
 );
 
     // --- FSM States ---
@@ -110,11 +110,12 @@ module harmony_core (
     reg [2:0]  c_h_pat;
     reg [7:0] occ_msb;
     reg [7:0] occ_lsb;
+    wire out_vld;
 
     assign occ_msb = occ[15:8];
     assign occ_lsb = occ[7:0];
 	
-    wire _unused_ok = &{uio_in, 1'b0};
+    //wire _unused_ok = &{uio_in, 1'b0};
     
     // LFSR Pattern Selection logic
     wire [2:0] design_pat = (lfsr[6:4] == 3'b000) ? (lfsr[15:13] | 3'b001) : lfsr[6:4];
@@ -183,26 +184,17 @@ module harmony_core (
         end
         // Check South
         if (pos <= 11 && occ[pos+4]) begin     
-            //acc = acc + get_pair_score(pat, board[pos+4]);
-
 	    acc = acc + 8'(get_pair_score(pat, board[pos+4]));
-
             neighbor_count = neighbor_count + 1;
         end
         // Check West
         if (pos % 4 != 0 && occ[pos-1]) begin  
-            //acc = acc + get_pair_score(pat, board[pos-1]);
-
 	    acc = acc + 8'(get_pair_score(pat, board[pos-1]));
-
             neighbor_count = neighbor_count + 1;
         end
         // Check East
         if (pos % 4 != 3 && occ[pos+1]) begin  
-            //acc = acc + get_pair_score(pat, board[pos+1]);
-
 	    acc = acc + 8'(get_pair_score(pat, board[pos+1]));
-
             neighbor_count = neighbor_count + 1;
         end
             
@@ -299,22 +291,21 @@ module harmony_core (
         nxt_hscorefinal = '0;
         nxt_acc_hscore  = 8'sd0;
         nxt_acc_dscore  = 8'sd0;
-        uio_out_int = 1'b0; 
-        uio_oe_int  = 1'b1; //indicates that Pin 0 is output, so uio_out[0] is a valid output, rest are all indicating inputs from uio_in
+        uio_out_int[0] = 1'b0; 
+        uio_oe_int[0]  = 1'b1; //indicates that Pin 0 is output, so uio_out[0] is a valid output, rest are all indicating inputs from uio_in
       //ignore inputs, we are only using uio_out as an indicator for valid output. As design's move can be 0 to any cycles from the clock cycle the curr_state becomes 3. So to indicate which cycle, the nxt_dscorefinal value is correct score of design for that round, we use this method.
 //using only dscorefinal for output is wrong, as it gives off by 1 round the score. so, we get round 1 score in round 2, which is not useful at all, as we get score after 2 rounds are alreayd played.(1st round and 2nd round plays by the end of that round are already registered)
 
         case (curr_state)
             ST_HUMANPLAY: begin
-            	//uio_out_int 	= 1'b1;
                 nxt_acc_hscore  = calc_move_value(c_h_pos, c_h_pat);
                 nxt_hscorefinal = hscorefinal + nxt_acc_hscore;
-                //uio_out_int 	= 1'b1;        // Tell the TB: "Sample this now!" //dont use for human play score recording, use only for design round score recording
+                //uio_out_int 	= 1'b1;// Tell the TB: "Sample this now!" //dont use for human play score recording, use only for design round score recording
             end
 
             ST_DESIGNPLAY: begin
                 if (!occ[lfsr_pos]) begin
-                    uio_out_int 	 = 1'b1;
+                    uio_out_int[0] 	 = 1'b1;
                     nxt_acc_dscore  	 = calc_move_value(lfsr_pos, design_pat);
                     nxt_dscorefinal 	 = dscorefinal + nxt_acc_dscore;
                 end
@@ -323,6 +314,8 @@ module harmony_core (
 
         endcase
     end
+    
+    assign out_vld = uio_out_int[0];
 
     always_comb begin
       uo_out_data = 8'h00; 
@@ -338,7 +331,7 @@ module harmony_core (
           end
 
           ST_DESIGNPLAY: begin
-              uo_out_data = uio_out_int ? nxt_acc_dscore : 8'b0;//not nxt_dscorefinal as that is cumulative score until that round
+              uo_out_data = out_vld ? nxt_acc_dscore : 8'b0;//not nxt_dscorefinal as that is cumulative score until that round
 	      //uo_out_data = dscorefinal;
           end
 
@@ -361,7 +354,13 @@ module harmony_core (
 
       endcase
 	end
+	
+    always_comb begin
+      uio_out_int[3:1] = curr_state;
+      uio_oe_int[1]    = 1'b1;
+    end
   
   assign uo_out = uo_out_data;
+
 
 endmodule
