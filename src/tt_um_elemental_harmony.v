@@ -24,7 +24,7 @@ module tt_um_elemental_harmony (
 
 
     
-    assign uio_oe[7:4]  = 4'b0000;
+    assign uio_oe[7:2]  = 6'b000000;
     assign uio_out[7:4] = 4'b0000;
   
     wire internal_rst_n;
@@ -311,6 +311,14 @@ module harmony_core (
                 end
             end
             
+            default: begin
+            	nxt_dscorefinal = '0;
+		nxt_hscorefinal = '0;
+		nxt_acc_hscore  = 8'sd0;
+		nxt_acc_dscore  = 8'sd0;
+		uio_out_int[0]  = 1'b0; 
+		uio_oe_int[0]   = 1'b1; 
+            end
 
         endcase
     end
