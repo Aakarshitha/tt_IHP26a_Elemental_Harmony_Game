@@ -17,7 +17,7 @@ Bring balance to a 4×4 elemental board by placing patterns (Air, Water, Fire, E
  Lose if conflict overtakes the board — or if you exhaust your allowed retries.
 
 🌍 The Elements & Their Patterns
-![Elemental Patterns](docs/elements.png)
+![Elemental Patterns](elements.png)
 
 Each pattern has its own personality => some blend, others clash.
 
@@ -31,7 +31,7 @@ Row = newly placed pattern
 Column = existing neighboring pattern (N/E/S/W)
 Values: +2 (strong), +1 (mild), 0 (same), −2 (conflict)
 
-![Elemental Patterns](docs/Pairwise_Score_Table.png)
+![Elemental Patterns](Pairwise_Score_Table.png)
 
 
 
